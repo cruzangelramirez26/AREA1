@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EGEL Plus — Área 1 Completa: Análisis de Sistemas de Software</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0B0F1A;font-family:'Crimson Pro',Georgia,serif;color:#CBD5E1}
+    button{cursor:pointer;border:none;font-family:'Crimson Pro',Georgia,serif}
+    ::selection{background:#2563EB;color:#fff}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .fu{animation:fadeUp 0.3s ease-out both}
+    .m{font-family:'JetBrains Mono',monospace}
+    .r{font-size:11px;color:#64748B;font-style:italic;margin-top:4px;line-height:1.5}
+    a{color:#60A5FA;text-decoration:none} a:hover{text-decoration:underline}
+    ::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState}=React;
+
+const T={
+// ══════════════ 1.1 TIPOS DE REQUERIMIENTOS ══════════════
+"1.1":[
+{id:"clasif",title:"Clasificación fundamental",icon:"🏷️",color:"#3B82F6",
+content:`**Requerimientos de usuario** son declaraciones en lenguaje natural sobre los servicios que el sistema debe ofrecer. Están escritos para que los entienda el cliente.
+Ejemplo: "El sistema debe permitir consultar el historial de compras."
+
+**Requerimientos de sistema** son descripciones más detalladas y precisas de las funciones, servicios y restricciones. Son la base para el contrato y el diseño.
+Ejemplo: "El sistema debe retornar el historial de compras de un usuario dado su ID, con paginación de 20 registros, en menos de 2 segundos."
+
+**Funcionales vs No Funcionales (Sommerville, 2011, Cap. 4.1):**
+
+**Requerimientos funcionales** describen qué hace el sistema: entradas, salidas, comportamientos y funciones específicas. Son los servicios que el sistema provee al usuario.
+Ejemplos: registrar un usuario, generar un reporte, enviar una notificación, calcular un total.
+
+**Requerimientos no funcionales** describen restricciones y cualidades del sistema. Sommerville los clasifica en tres grandes grupos:
+• **De producto:** rendimiento, usabilidad, confiabilidad, portabilidad, eficiencia, seguridad. Ejemplo: "El sistema debe soportar 500 usuarios simultáneos."
+• **Organizacionales:** estándares de proceso, políticas de la empresa, metodologías a seguir. Ejemplo: "El desarrollo debe seguir el estándar ISO 12207."
+• **Externos:** legales, éticos, regulatorios, interoperabilidad. Ejemplo: "El sistema debe cumplir con la Ley Federal de Protección de Datos Personales."
+
+**Requerimientos de dominio** provienen del área de aplicación del sistema, no del usuario. Si el sistema es para un hospital, las regulaciones de salud imponen requerimientos. Pueden ser funcionales o no funcionales.`,
+ref:"Sommerville (2011) Cap. 4.1 · Pressman (2010) Cap. 5 · SWEBOK v3.0 Cap. 1.3"},
+
+{id:"caract",title:"Características clave para el EGEL",icon:"⚡",color:"#F59E0B",
+content:`**Los requerimientos funcionales deben ser:**
+• **Completos:** cubrir todos los servicios del sistema
+• **Consistentes:** sin contradicciones entre sí
+• **Verificables:** se puede comprobar que se cumplen
+• **No ambiguos:** una sola interpretación posible
+
+**Los RNF suelen ser MÁS CRÍTICOS que los funcionales individuales** porque si fallan, el sistema entero puede ser inutilizable. Ejemplo: si el rendimiento es pésimo, NINGUNA función es usable. Si la seguridad falla, TODO está comprometido. Un RF que falla solo afecta ESA función.
+
+**Los RNF deben expresarse de forma medible y cuantificable:**
+• ✗ MAL: "El sistema debe ser rápido"
+• ✓ BIEN: "El sistema debe responder en menos de 2 segundos para el 95% de las consultas con 100 usuarios concurrentes"
+
+**Truco EGEL para clasificar un enunciado:**
+1. ¿Describe una FUNCIÓN/SERVICIO? → Funcional
+2. ¿Describe una CUALIDAD/RESTRICCIÓN? → No funcional
+   → ¿Del producto? ¿De la empresa? ¿De una ley?
+3. ¿Lo impone el ÁREA DE NEGOCIO? → De dominio
+4. ¿Lenguaje natural o técnico? → Usuario vs Sistema
+
+**Niveles según Wiegers & Beatty (2013):**
+• **De negocio:** Objetivos organizacionales. "Reducir costos 40%."
+• **De usuario:** Lo que necesita hacer. "Generar cotizaciones en 5 min."
+• **Del sistema:** Detalle técnico del software.`,
+ref:"Sommerville (2011) Cap. 4.1 · McConnell Checklist · Wiegers & Beatty (2013) Cap. 1"},
+],
+
+// ══════════════ 1.2 TÉCNICAS DE OBTENCIÓN, ANÁLISIS, PRIORIZACIÓN Y VALIDACIÓN ══════════════
+"1.2":[
+{id:"obtencion",title:"Técnicas de Obtención (Elicitación)",icon:"🔍",color:"#3B82F6",
+content:`**7 técnicas principales:**
+
+**1. Entrevistas (Sommerville Cap. 4.5.1):** Conversación planificada con stakeholders. Tipos: Estructurada (guión fijo), Semi-estructurada (la MÁS USADA — guión flexible), No estructurada (conversación libre). Preguntas: de contexto, de flujo, de problema, abiertas vs cerradas. Ventajas: profundidad, flexibilidad. Desventajas: no escala, depende del analista.
+
+**2. Observación/Etnografía (Sommerville Cap. 4.6):** ÚNICA técnica para requisitos TÁCITOS. Tipos: Pasiva, Activa/participante, Etnografía (inmersión). Efecto Hawthorne: personas cambian comportamiento al saberse observadas. Cuándo usar: cuando usuarios no pueden explicar sus procesos.
+
+**3. Cuestionarios/Encuestas (Pressman Cap. 5):** Escalan a muchos usuarios. Datos cuantitativos. Tipos: Cerradas (Likert 1-5, opción múltiple), Abiertas, Mixtas. Ventajas: escala, bajo costo, anonimato. Desventajas: no profundizan, no capturan tácitos.
+
+**4. Talleres JAD (Wiegers Cap. 7):** Roles: Facilitador (NO opina, solo guía), Escribano (notas), Participantes, Observadores. Resuelve conflictos entre stakeholders.
+
+**5. Brainstorming:** Regla #1: SIN juicio durante generación. Evaluación viene DESPUÉS.
+
+**6. Prototipado (Sommerville Cap. 2.3):** Lo-Fi (papel/wireframe) vs Hi-Fi (digital interactivo). Desechable (se tira) vs Evolutivo (se convierte en sistema). Riesgo: usuario cree que prototipo = sistema final.
+
+**7. Análisis de documentos (Pressman Cap. 5):** PRIMERA técnica al iniciar proyecto. Entiende dominio sin requerir tiempo del usuario. Incluye arqueología de sistemas.
+
+**Combinación ideal:** Docs + Entrevistas + Observación (inicio) → Prototipos + Talleres (validación).`,
+ref:"Sommerville (2011) Cap. 4.5-4.6 · Pressman (2010) Cap. 5 · Wiegers & Beatty (2013) Cap. 7"},
+
+{id:"analisis",title:"Análisis de Requisitos",icon:"🔬",color:"#8B5CF6",
+content:`**Clasificación (Sommerville Cap. 4.1):**
+• Funcional vs No funcional (producto/organizacional/externo)
+• Negocio → Usuario → Sistema (niveles de Wiegers)
+
+**Modelado conceptual (Pressman Cap. 6):**
+• Diagrama de contexto = LÍMITES del sistema
+• Modelo de dominio = entidades del PROBLEMA (no de la solución)
+• Diagrama de actividad = flujos de PROCESO
+• Diagrama de estados = CICLO DE VIDA de una entidad
+
+**Negociación (Sommerville Cap. 4.5):**
+Cuando stakeholders tienen requisitos contradictorios: identificar → detectar conflictos → discutir → priorizar → documentar acuerdos. Técnica win-win: nadie pierde completamente.`,
+ref:"Sommerville (2011) Cap. 4.5 · Pressman (2010) Cap. 6 · SWEBOK v3.0 Cap. 1.4"},
+
+{id:"priorizacion",title:"Técnicas de Priorización",icon:"📊",color:"#F59E0B",
+content:`**MoSCoW (Hatton, 2008):** Must (indispensable) · Should (importante) · Could (deseable) · Won't (NO en esta versión, documentado para futuro). Won't ≠ nunca.
+
+**Valor vs. Esfuerzo (Wiegers Cap. 16):** Alto valor + Bajo esfuerzo = PRIMERO (quick wins). Bajo valor + Alto esfuerzo = DESCARTAR.
+
+**Kano:** Básicos (must-be, su ausencia frustra), Rendimiento (más es mejor, lineal), Entusiasmo (delighters, sorpresas positivas).
+
+**Pairwise Comparison (Hatton):** Compara cada par. N×(N-1)/2 comparaciones. Muy precisa pero impráctica con >15 requisitos.
+
+**Dot Voting:** Cada stakeholder reparte puntos. Rápida pero susceptible a influencia social (votos visibles).
+
+**Planning Poker (Usman et al., 2015):** Cartas Fibonacci EN SECRETO (evita sesgo de anclaje). Discutir diferencias extremas. Buscar consenso.`,
+ref:"Hatton (2008) IEEE · Wiegers & Beatty (2013) Cap. 16 · Usman et al. (2015) ACM"},
+
+{id:"validacion",title:"Técnicas de Validación",icon:"✅",color:"#10B981",
+content:`**Verificación vs Validación (Sommerville Cap. 4.7):**
+• Verificación = ¿lo construimos CORRECTAMENTE? (cumple specs)
+• Validación = ¿construimos lo CORRECTO? (cumple necesidad real)
+
+**Revisiones/Inspecciones:** Criterios de McConnell: Completo, Consistente, No ambiguo, Verificable, Trazable, Factible. Incluir TESTERS (detectan no verificabilidad).
+
+**Prototipado como validación:** Al inicio sin requisitos = elicitación. Después de documentar = validación. El prototipo solo valida funcionales y UI — los no funcionales necesitan revisiones técnicas separadas.
+
+**Generación de casos de prueba:** Si no puedes escribir un test → el requisito no es verificable → está mal escrito. "Rápido" ≠ verificable. "< 2 seg" = verificable.
+
+**Matriz de trazabilidad (Wiegers Cap. 20):** Origen → Requisito → Caso de uso → Diseño → Prueba. Bidireccional: Forward (req→prueba) y Backward (prueba→req→origen). Detecta requisitos huérfanos y pruebas sin requisito.`,
+ref:"Sommerville (2011) Cap. 4.7 · McConnell Checklist · Wiegers & Beatty (2013) Cap. 17, 20"},
+],
+
+// ══════════════ 1.3 TÉCNICAS DE DOCUMENTACIÓN ══════════════
+"1.3":[
+{id:"srs",title:"Documento SRS (IEEE 830)",icon:"📄",color:"#7C3AED",
+content:`**El SRS (Software Requirements Specification)** es el documento central con TODOS los requisitos. Es el contrato entre cliente y equipo.
+
+**Estructura IEEE 830 / ISO 29148:**
+**1. Introducción:** Propósito, alcance, definiciones, referencias.
+**2. Descripción general:** Perspectiva del producto, funciones de alto nivel, características de usuarios, restricciones generales, suposiciones.
+**3. Requisitos específicos (el corazón):**
+• 3.1 Funcionales (por función, caso de uso o modo de operación)
+• 3.2 Interfaces externas (UI, hardware, software, comunicaciones)
+• 3.3 Rendimiento
+• 3.4 Restricciones de diseño (tecnologías específicas van aquí, NO en 2.4)
+• 3.5 Atributos de calidad (seguridad, mantenibilidad, portabilidad)
+**4. Apéndices**
+
+**8 propiedades de un buen SRS (IEEE 830 / McConnell):** Correcto, No ambiguo, Completo, Consistente, Clasificado por importancia, Verificable, Modificable, Trazable.`,
+ref:"Sommerville (2011) Cap. 4.3 · Pressman (2010) Cap. 7 · IEEE 830 · McConnell"},
+
+{id:"casosuso",title:"Casos de Uso (UML)",icon:"📐",color:"#3B82F6",
+content:`**Caso de uso = secuencia de interacciones entre actor y sistema para lograr un objetivo (Pressman Cap. 6).**
+
+**Elementos:** Actor (figura palo), Caso de uso (óvalo), Sistema (rectángulo límite).
+
+**Relaciones:**
+• **«include»:** El base SIEMPRE ejecuta al incluido. Obligatorio. Flecha: del BASE al INCLUIDO. Para comportamiento COMÚN reutilizable.
+• **«extend»:** El extendido se ejecuta OPCIONALMENTE bajo condición. Flecha: del EXTENDIDO al BASE (dirección OPUESTA a include). Para comportamiento CONDICIONAL.
+• **Generalización de actores:** Herencia de casos de uso.
+
+**Plantilla completa (Wiegers Cap. 9):** ID, Actor(es), Precondiciones, Flujo principal (happy path), Flujos alternativos, Flujos de excepción, Postcondiciones, Requisitos especiales.
+
+**Niveles:** Resumen (1-2 párrafos), Casual (varios párrafos), Completo/fully dressed (plantilla completa para SRS formal).`,
+ref:"Pressman (2010) Cap. 6 · Sommerville (2011) Cap. 5.2 · Wiegers & Beatty (2013) Cap. 9"},
+
+{id:"uml",title:"Diagramas UML para Requisitos",icon:"📊",color:"#06B6D4",
+content:`**4 diagramas clave para documentar requisitos:**
+
+**1. Casos de Uso:** Actores + funcionalidades. QUÉ hace el sistema.
+
+**2. Actividad:** Flujo de proceso/workflow. Nodo inicial/final, actividades (rectángulo redondeado), decisión (rombo con [condición]), fork/join (barra gruesa = PARALELO, join espera que TODOS terminen), swimlanes (quién hace qué).
+
+**3. Secuencia:** Interacción TEMPORAL entre objetos. Lifelines (línea vertical), mensajes (flechas horizontales en orden), fragmentos combinados (alt=if/else, loop, opt=opcional). Para documentar quién envía qué mensaje a quién y en qué ORDEN.
+
+**4. Estados (Máquina de estados):** CICLO DE VIDA de una entidad. Estados (rectángulo redondeado), transiciones (flecha con evento[condición]/acción). Ej: Pedido → Creado → Pagado → Enviado → Entregado.
+
+**¿Cuál usar?** Casos de uso = funcionalidad. Actividad = flujo de proceso. Secuencia = orden temporal de mensajes. Estados = etapas de un objeto.`,
+ref:"Sommerville (2011) Cap. 5 · Pressman (2010) Cap. 6"},
+
+{id:"historias",title:"Historias de Usuario",icon:"📝",color:"#10B981",
+content:`**Formato:** "Como [ROL], quiero [ACCIÓN], para [BENEFICIO]."
+
+**Las 3 C's (Ron Jeffries):** Card (tarjeta breve), Conversation (discusión para clarificar), Confirmation (criterios de aceptación verificables — formato Gherkin: Dado/Cuando/Entonces).
+
+**INVEST (Bill Wake):** Independent, Negotiable, Valuable, Estimable, Small, Testable.
+
+**Épica:** Historia demasiado grande para un sprint. Se descompone en historias más pequeñas.
+
+**Historias vs Casos de uso:** Historias = breves, perspectiva usuario, ágil, se completan con conversación. Casos de uso = detallados, perspectiva sistema, tradicional/RUP, auto-contenidos.
+
+**User Story Mapping (Patton, 2014):** Mapa bidimensional. Eje X = actividades del usuario en orden (backbone). Eje Y = tareas por detalle/prioridad. Walking skeleton = MVP que cubre flujo completo de izquierda a derecha con funcionalidad mínima.`,
+ref:"Patton (2014) · Visual Paradigm · Wiegers & Beatty (2013) Cap. 10"},
+
+{id:"estimacion",title:"Estimación y Trazabilidad",icon:"📏",color:"#EF4444",
+content:`**Story Points:** Unidad RELATIVA de esfuerzo (no horas). Fibonacci: 1,2,3,5,8,13,21. A mayor tamaño, mayor incertidumbre.
+
+**Planning Poker (Usman et al., 2015):** PO presenta historia → equipo discute → cartas EN SECRETO (evita anclaje) → revelan simultáneo → discuten extremos → re-estiman hasta consenso. NUNCA promediar.
+
+**Puntos de Función (Pressman Cap. 23):** Miden tamaño FUNCIONAL ABSOLUTO. EI (entradas), EO (salidas), EQ (consultas), ILF (archivos internos), EIF (archivos externos). Independientes del equipo. Story points = relativos al equipo.
+
+**Trazabilidad (Wiegers Cap. 20, SWEBOK Cap. 1.6):** Forward = req → diseño → código → prueba. Backward = prueba → código → diseño → req → origen. Matriz bidireccional detecta requisitos huérfanos y pruebas sin requisito.
+
+**Gestión de cambios (Sommerville Cap. 4.8):** Baseline = versión congelada del SRS. Todo cambio posterior: Solicitud → Análisis de impacto (usando trazabilidad) → Aprobación → Implementación → Actualizar trazabilidad. INCLUSO cambios obligatorios pasan por el proceso.
+
+**SysML (sysml.org):** Extensión de UML para SISTEMAS (hardware + software). Tiene diagrama de REQUISITOS (UML no lo tiene). Usar cuando el sistema incluye sensores, actuadores, hardware.`,
+ref:"Usman et al. (2015) · Pressman (2010) Cap. 23 · Wiegers & Beatty (2013) Cap. 20 · Sommerville (2011) Cap. 4.8 · SysML.org"},
+],
+};
+
+const Q=[
+// ═══ 1.1 (10) ═══
+{q:"Un sistema hospitalario tiene el requisito: 'Toda receta electrónica debe incluir la cédula profesional del médico según la NOM-024-SSA3'. Otro requisito dice: 'El sistema debe permitir a los médicos crear recetas'. ¿Cómo se clasifican CORRECTAMENTE?",
+o:["Ambos son funcionales","El primero es de dominio, el segundo es funcional","El primero es no funcional externo, el segundo es funcional","Ambos son de dominio"],c:1,
+x:"La NOM viene del DOMINIO de salud (no del usuario ni del desarrollador), así que es un requisito de dominio. Crear recetas es una función del sistema. Según Sommerville (2011, Cap. 4.1), los requisitos de dominio los impone el área de aplicación.",
+ref:"Sommerville (2011) Cap. 4.1",sub:"1.1",trap:"C confunde 'externo' con 'dominio'. Las regulaciones de un SECTOR específico (salud) son de dominio. Las leyes GENERALES (protección de datos) son externas."},
+
+{q:"¿Cuál de estos enunciados es un requerimiento funcional DISFRAZADO de no funcional?",
+o:["'El sistema debe estar disponible 99.9% del tiempo'","'El sistema debe generar un respaldo automático a las 2:00 AM diariamente'","'El tiempo de respuesta debe ser menor a 3 segundos'","'El sistema debe cumplir con PCI-DSS para pagos'"],c:1,
+x:"'Generar un respaldo a las 2:00 AM' describe una ACCIÓN concreta del sistema con trigger (hora) y resultado (respaldo). Según Sommerville, si describe un COMPORTAMIENTO específico es funcional, aunque suene a infraestructura. Disponibilidad (A), rendimiento (C) y cumplimiento (D) son genuinamente no funcionales.",
+ref:"Sommerville (2011) Cap. 4.1",sub:"1.1",trap:"Muchos clasifican respaldos como 'no funcional' por asociarlos con infraestructura. La clave: si describe una ACCIÓN con trigger y resultado = funcional."},
+
+{q:"Un requerimiento de usuario dice: 'El sistema debe mostrar el historial de compras'. El requerimiento de sistema correspondiente es: 'GET /api/historial/{userId} retorna JSON con paginación de 20 registros en menos de 2 segundos'. ¿Qué NIVEL de detalle falta en el de usuario y sobra en el de sistema?",
+o:["Al de usuario le falta la API; al de sistema le sobra el tiempo de respuesta","Al de usuario le sobra detalle; al de sistema le falta detalle","Ambos están correctos en su nivel — el de usuario es para el cliente y el de sistema para el contrato técnico","Al de usuario le falta paginación; al de sistema le sobran ambos detalles"],c:2,
+x:"Según Sommerville (2011), los requisitos de usuario están en lenguaje natural para el CLIENTE (no necesitan API ni detalles técnicos). Los de sistema son especificaciones TÉCNICAS detalladas para el contrato y diseño. Cada nivel es correcto PARA SU AUDIENCIA.",
+ref:"Sommerville (2011) Cap. 4.1 · Wiegers & Beatty (2013) Cap. 1",sub:"1.1",trap:"A y D asumen que el de usuario necesita más detalle. El punto es que cada nivel tiene su audiencia y propósito."},
+
+{q:"'El sistema debe encriptar todas las contraseñas con bcrypt y un salt de 12 rondas.' ¿Es funcional o no funcional?",
+o:["Funcional, porque describe una acción del sistema","No funcional de seguridad (producto), porque describe cómo proteger datos","Depende: la encriptación es no funcional, pero el algoritmo específico es una restricción de diseño","No funcional externo, porque la seguridad la exigen las leyes"],c:2,
+x:"Es un caso complejo. 'Encriptar contraseñas' como concepto es seguridad (RNF de producto). Pero especificar 'bcrypt con salt de 12 rondas' es una RESTRICCIÓN DE DISEÑO que va en la sección 3.4 del SRS. Es un RNF que también actúa como restricción de implementación.",
+ref:"Sommerville (2011) Cap. 4.1 · IEEE 830",sub:"1.1",trap:"A suena lógico ('encriptar' es una acción) pero encriptar es una MEDIDA DE SEGURIDAD, no un servicio para el usuario. El usuario no 'usa' la encriptación directamente."},
+
+{q:"Si un RNF de rendimiento falla (tiempo de respuesta de 30 segundos), ¿cuál es el impacto según Sommerville?",
+o:["Solo afecta las funciones que requieren consultas a la base de datos","Solo afecta la función específica que fue probada","El sistema COMPLETO se vuelve inutilizable — todas las funciones se ven afectadas","Solo afecta a los usuarios que hacen consultas pesadas"],c:2,
+x:"Sommerville enfatiza que los RNF son más CRÍTICOS que los funcionales porque son TRANSVERSALES: si el rendimiento es pésimo, NINGUNA función es usable. A diferencia de un RF que falla (solo esa función se ve afectada), un RNF que falla impacta TODO el sistema.",
+ref:"Sommerville (2011) Cap. 4.1",sub:"1.1",trap:"Las opciones A, B y D intentan limitar el impacto. La clave de los RNF es que son GLOBALES — afectan al sistema completo."},
+
+{q:"¿Cuál de estos es un RNF ORGANIZACIONAL (no de producto ni externo)?",
+o:["'El sistema debe responder en menos de 2 segundos' (rendimiento)","'Todo el código debe pasar revisión de pares antes de merge a main'","'El sistema debe cumplir con GDPR para usuarios europeos'","'La interfaz debe ser accesible según WCAG 2.1'"],c:1,
+x:"La revisión de pares es una POLÍTICA INTERNA de la organización sobre su proceso de desarrollo. Rendimiento (A) es de producto. GDPR (C) es externo/legal. WCAG (D) es externo/regulatorio. Según Sommerville, los RNF organizacionales son estándares y políticas internas.",
+ref:"Sommerville (2011) Cap. 4.1",sub:"1.1",trap:"D es tentadora: WCAG parece organizacional pero es un estándar EXTERNO de accesibilidad. Las políticas de code review son decisiones INTERNAS de la empresa."},
+
+{q:"Un requisito dice: 'El sistema debe ser seguro'. Otro dice: 'El sistema debe implementar autenticación OAuth 2.0, encriptar datos en tránsito con TLS 1.3 y en reposo con AES-256'. ¿Cuál es la relación entre ambos?",
+o:["Son el mismo requisito en diferentes formatos","El primero es un RNF vago; el segundo lo descompone en requisitos verificables y restricciones de diseño","El primero es de usuario y el segundo es funcional","El segundo invalida al primero"],c:1,
+x:"'Ser seguro' es un RNF de producto extremadamente vago y NO verificable. El segundo lo descompone en especificaciones medibles y verificables. Según Sommerville y McConnell, los RNF vagos DEBEN descomponerse en requisitos concretos y cuantificables.",
+ref:"Sommerville (2011) Cap. 4.7 · McConnell",sub:"1.1",trap:"A dice que son lo mismo — no lo son en calidad. C lo clasifica mal. D es incorrecto: el segundo COMPLEMENTA al primero, no lo invalida."},
+
+{q:"Un equipo debate si 'El sistema debe enviar un email de confirmación después de cada compra' es funcional o no funcional. ¿Cuál es la clasificación correcta y por qué?",
+o:["No funcional de usabilidad, porque mejora la experiencia del usuario","Funcional, porque describe un servicio específico que el sistema debe realizar","No funcional de producto, porque es una notificación automática","Depende de si el usuario lo pidió o lo impone la regulación"],c:1,
+x:"Enviar un email es un SERVICIO/ACCIÓN específica del sistema: tiene un trigger (compra completada), una acción (enviar email) y un resultado observable. Según Sommerville, si describe QUÉ HACE el sistema = funcional. Que mejore la UX no lo convierte en RNF de usabilidad.",
+ref:"Sommerville (2011) Cap. 4.1",sub:"1.1",trap:"A es la trampa más fuerte: 'mejora la experiencia' suena a usabilidad, pero la ACCIÓN de enviar email es un servicio concreto. Usabilidad sería 'el email debe ser fácil de leer'."},
+
+{q:"¿En qué se diferencia un requisito de DOMINIO de un requisito NO FUNCIONAL EXTERNO?",
+o:["No hay diferencia, son lo mismo","El de dominio viene del SECTOR/INDUSTRIA específica; el externo viene de leyes y regulaciones GENERALES","El de dominio es siempre funcional; el externo es siempre no funcional","El de dominio lo define el usuario; el externo lo define el gobierno"],c:1,
+x:"Los requisitos de dominio provienen del ÁREA DE APLICACIÓN específica (sector salud, finanzas, manufactura) y sus prácticas propias. Los externos son leyes y regulaciones GENERALES que aplican a cualquier sistema (GDPR, protección de datos). Un requisito de dominio puede ser funcional o no funcional.",
+ref:"Sommerville (2011) Cap. 4.1 · SWEBOK v3.0 Cap. 1.3",sub:"1.1",trap:"A confunde dos categorías diferentes. C es falso: dominio puede ser funcional O no funcional. D es parcialmente falso: el dominio lo impone el SECTOR, no necesariamente el usuario."},
+
+{q:"Un sistema de contabilidad tiene: (1) 'Calcular IVA al 16% sobre todas las facturas' y (2) 'Generar CFDI según el estándar del SAT'. ¿Cómo se clasifican?",
+o:["Ambos funcionales","(1) es funcional, (2) es de dominio","Ambos son de dominio — los impone el contexto fiscal mexicano","(1) es de dominio, (2) es no funcional externo"],c:2,
+x:"AMBOS provienen del dominio fiscal mexicano. El IVA al 16% es una regla del dominio contable/fiscal, y el CFDI es un estándar impuesto por el SAT (autoridad fiscal). Según Sommerville, los requisitos de dominio los impone el ÁREA DE APLICACIÓN, no el usuario ni el desarrollador.",
+ref:"Sommerville (2011) Cap. 4.1",sub:"1.1",trap:"B clasifica el IVA como funcional. Aunque 'calcular' suena a función, la regla del 16% la impone el dominio fiscal. Sin el contexto fiscal, esa regla no existiría."},
+
+// ═══ 1.2 (13) ═══
+{q:"Un analista realizó 15 entrevistas pero al implementar el sistema, los usuarios dicen que el flujo real es diferente. Luego hizo observación y descubrió 8 requisitos tácitos que nadie mencionó. Finalmente envió encuestas a 200 usuarios para priorizar. ¿En qué orden debió usar las técnicas desde el inicio?",
+o:["Entrevistas → Encuestas → Observación","Observación → Entrevistas → Encuestas","Análisis de documentos → Entrevistas + Observación → Encuestas","Encuestas → Observación → Entrevistas"],c:2,
+x:"Según Pressman (2010) y Wiegers & Beatty (2013), el orden óptimo es: (1) Análisis de documentos para entender el dominio, (2) Entrevistas + Observación en paralelo para capturar tanto lo explícito como lo tácito, (3) Encuestas para validar y priorizar a gran escala. El analista saltó los documentos y la observación inicial.",
+ref:"Pressman (2010) Cap. 5 · Wiegers & Beatty (2013) Cap. 7",sub:"1.2",trap:"B omite análisis de documentos. El error del analista original fue hacer SOLO entrevistas primero, sin observar ni documentarse previamente."},
+
+{q:"En un taller JAD, el facilitador toma partido por la propuesta del gerente de ventas porque 'tiene más experiencia en el negocio'. ¿Qué principios viola?",
+o:["Solo el principio de neutralidad del facilitador","Neutralidad Y la separación de roles (el facilitador está actuando como participante)","Solo la separación de roles","No viola ningún principio — el facilitador puede priorizar por experiencia"],c:1,
+x:"Viola DOS principios: (1) NEUTRALIDAD — el facilitador no debe favorecer ninguna posición (Wiegers Cap. 7). (2) SEPARACIÓN DE ROLES — al tomar partido, el facilitador se convierte en participante, abandonando su rol de guía neutral. Ambas violaciones comprometen la sesión.",
+ref:"Wiegers & Beatty (2013) Cap. 7",sub:"1.2",trap:"A identifica solo un principio. El facilitador al opinar TAMBIÉN está actuando fuera de su rol (como participante), violando la separación."},
+
+{q:"Un stakeholder dice: 'Necesito que el sistema me avise cuando hay problemas urgentes'. El analista documenta: 'RF-045: El sistema debe notificar problemas urgentes al usuario'. ¿Qué está mal?",
+o:["Nada — el requisito refleja lo que pidió el stakeholder","El requisito es igual de vago que la solicitud: no define qué es 'problema', qué es 'urgente', cómo 'avisa' ni a quién exactamente","Solo falta definir el canal de notificación","Debería ser un RNF, no un RF"],c:1,
+x:"El analista documentó la AMBIGÜEDAD del stakeholder sin resolverla. Wiegers & Beatty (2013, Cap. 7) enfatizan que el analista debe usar preguntas de follow-up: ¿Qué tipo de problemas? ¿Qué criterio define 'urgente'? ¿Por qué canal? ¿A quién? ¿En cuánto tiempo? Documentar un requisito vago es postergar el problema.",
+ref:"Wiegers & Beatty (2013) Cap. 7 · Sommerville (2011) Cap. 4.5.1",sub:"1.2",trap:"A es la trampa: suena como que el analista hizo su trabajo, pero en realidad 'tradujo' vaguedad a vaguedad formal."},
+
+{q:"Un proyecto prioriza con MoSCoW: Requisito A es Must (valor:9, esfuerzo:8), Requisito B es Should (valor:7, esfuerzo:2). Con presupuesto para solo uno, ¿cuál implementar primero?",
+o:["A, porque Must siempre tiene prioridad sobre Should","B, porque su ratio valor/esfuerzo (3.5) es muy superior al de A (1.125)","A, porque tiene mayor valor absoluto","No se puede decidir sin más información"],c:1,
+x:"MoSCoW solo mide importancia, no costo. Según Wiegers & Beatty (2013, Cap. 16), cuando hay restricción de presupuesto, la matriz valor/esfuerzo complementa a MoSCoW. B tiene ratio 3.5 vs A con 1.125. B es un quick win que entrega valor rápido. A podría implementarse después cuando haya más presupuesto.",
+ref:"Wiegers & Beatty (2013) Cap. 16 · Hatton (2008)",sub:"1.2",trap:"A es la trampa: 'Must siempre primero' suena lógico pero ignora la realidad del presupuesto. Con recursos limitados, el ratio valor/esfuerzo es más práctico."},
+
+{q:"El equipo descubre que el Requisito RF-023 no tiene caso de prueba en la matriz de trazabilidad, y el Caso de Prueba TC-045 no está vinculado a ningún requisito. ¿Qué indican estos dos problemas?",
+o:["Solo RF-023 es problema — TC-045 es una prueba exploratoria legítima","RF-023 podría no verificarse nunca; TC-045 podría estar probando algo que nadie pidió","Ambos indican problemas de documentación, no de contenido","Solo TC-045 es problema — RF-023 podría no necesitar prueba"],c:1,
+x:"Según Wiegers & Beatty (2013, Cap. 20), la trazabilidad BIDIRECCIONAL detecta ambos: Forward (RF-023 sin prueba = podría pasar a producción sin verificar). Backward (TC-045 sin requisito = desperdicio o requisito olvidado). AMBOS son problemas reales que la trazabilidad bidireccional está diseñada para detectar.",
+ref:"Wiegers & Beatty (2013) Cap. 20 · SWEBOK v3.0 Cap. 1.6",sub:"1.2",trap:"A y D minimizan uno de los problemas. C dice que son solo de documentación — pero un requisito sin prueba es un riesgo REAL de calidad."},
+
+{q:"En Kano, la velocidad de carga de un e-commerce que mejora de 3s a 1s genera mayor satisfacción proporcional. ¿Qué tipo de requisito es según Kano?",
+o:["Básico (must-be) — los usuarios esperan que cargue rápido","De rendimiento (one-dimensional) — relación lineal entre mejora y satisfacción","De entusiasmo (delighter) — sorprende positivamente","No aplica Kano a requisitos técnicos"],c:1,
+x:"La relación PROPORCIONAL (más rápido = más satisfacción, más lento = menos satisfacción) es la definición exacta de un requisito de RENDIMIENTO en Kano. Los básicos tienen techo de satisfacción (tener frenos no emociona). Los delighters no son esperados. La velocidad SÍ es esperada y MÁS siempre es MEJOR.",
+ref:"Wiegers & Beatty (2013) Cap. 16",sub:"1.2",trap:"A suena correcto: 'todos esperan que cargue rápido'. Pero en Kano, los básicos NO mejoran satisfacción al mejorarlos — solo causan insatisfacción al faltar. La velocidad SÍ mejora satisfacción proporcionalmente."},
+
+{q:"Un sistema cumple TODAS las especificaciones del SRS, pasa TODAS las pruebas, pero los usuarios no lo usan porque no resuelve su problema real. ¿Qué falló?",
+o:["Verificación — no se verificó correctamente","Validación — se construyó el producto equivocado","Testing — las pruebas no eran suficientes","Implementación — el código tiene bugs ocultos"],c:1,
+x:"Sommerville (2011, Cap. 4.7): Verificación = ¿lo construimos CORRECTAMENTE? (sí, cumple specs y pruebas). Validación = ¿construimos lo CORRECTO? (no, no resuelve el problema). El SRS estaba mal desde el principio — los requisitos no reflejaban las necesidades reales. Es el fallo de validación más costoso.",
+ref:"Sommerville (2011) Cap. 4.7",sub:"1.2",trap:"A y C confunden verificación con validación. El sistema PASA las pruebas (verificación OK) pero es el producto EQUIVOCADO (validación FAIL)."},
+
+{q:"¿Por qué en Planning Poker las cartas se revelan simultáneamente?",
+o:["Para ahorrar tiempo","Para que el Scrum Master no influya","Para evitar el sesgo de anclaje — que la primera estimación dicha influya a los demás","Porque es tradición de Scrum"],c:2,
+x:"El sesgo de anclaje (anchoring bias) según Usman et al. (2015) es un fenómeno cognitivo: el primer número mencionado 'ancla' las estimaciones posteriores. Revelar simultáneamente garantiza estimaciones INDEPENDIENTES. No es tradición ni ahorro de tiempo — es una medida contra un sesgo cognitivo real.",
+ref:"Usman et al. (2015) ACM",sub:"1.2",trap:"B suena razonable pero el Scrum Master generalmente no estima. El issue no es quién influye sino el PRIMER NÚMERO que se dice."},
+
+{q:"Con 40 requisitos, ¿cuántas comparaciones necesita Pairwise Comparison y es práctico?",
+o:["40 comparaciones — práctico","160 comparaciones — moderado","780 comparaciones — NO práctico","1,600 comparaciones — imposible"],c:2,
+x:"La fórmula es N×(N-1)/2 = 40×39/2 = 780 comparaciones. Según Hatton (2008), Pairwise se vuelve impracticable con más de ~15 requisitos. La estrategia es filtrar primero con MoSCoW y luego Pairwise solo para los Must have.",
+ref:"Hatton (2008) IEEE",sub:"1.2",trap:"La fórmula N×(N-1)/2 es clave. No es N (40) ni N² (1600)."},
+
+{q:"Un equipo observa que los cajeros de un banco siempre verifican un post-it pegado al monitor antes de aprobar transferencias grandes. Ningún manual menciona este paso. ¿Qué tipo de requisito es y cómo se descubrió?",
+o:["Funcional explícito, descubierto por entrevista","Requisito tácito, descubierto por observación","RNF de seguridad, descubierto por análisis de documentos","Requisito de dominio, descubierto por taller JAD"],c:1,
+x:"El post-it es un WORKAROUND no documentado que representa un requisito TÁCITO — algo que los cajeros hacen automáticamente sin poder verbalizarlo. Solo la OBSERVACIÓN lo descubrió. Sommerville (2011, Cap. 4.6) identifica exactamente este tipo de hallazgo como la fortaleza principal de la etnografía.",
+ref:"Sommerville (2011) Cap. 4.6",sub:"1.2",trap:"A es incorrecta: si fuera explícito y descubierto por entrevista, estaría en el manual. El punto es que es TÁCITO y nadie lo menciona."},
+
+{q:"Un requisito dice: 'El sistema debe ser rápido y seguro'. ¿Cuántas propiedades de calidad de McConnell viola?",
+o:["Una: verificabilidad","Dos: verificabilidad y no ambigüedad","Tres: verificabilidad, no ambigüedad y completitud","Cuatro: verificabilidad, no ambigüedad, completitud y trazabilidad"],c:2,
+x:"Viola TRES: (1) VERIFICABILIDAD — ¿cómo pruebas 'rápido' o 'seguro'? (2) NO AMBIGÜEDAD — 'rápido' y 'seguro' tienen múltiples interpretaciones. (3) COMPLETITUD — es tan vago que no cubre NADA específico. La trazabilidad no se viola necesariamente (podría tener un origen documentado).",
+ref:"McConnell Checklist · Sommerville (2011) Cap. 4.7",sub:"1.2",trap:"D agrega trazabilidad, pero trazabilidad es sobre el ORIGEN del requisito, no su calidad interna. Un requisito puede ser vago y aún tener trazabilidad."},
+
+{q:"Una startup no hace revisiones formales de requisitos y solo valida con prototipos rápidos. ¿Cuál es el riesgo PRINCIPAL?",
+o:["Ninguno — prototipos son suficientes en startups","Los prototipos no detectan inconsistencias ENTRE requisitos ni verifican completitud del conjunto","El riesgo es solo legal","Los prototipos no funcionan para equipos pequeños"],c:1,
+x:"Prototipos validan requisitos INDIVIDUALES (esta pantalla funciona) pero NO detectan problemas ENTRE requisitos: inconsistencias, redundancias, requisitos faltantes, conflictos entre áreas. La revisión formal examina el CONJUNTO. Según Sommerville (2011, Cap. 4.7), ambas técnicas se complementan.",
+ref:"Sommerville (2011) Cap. 4.7 · Wiegers & Beatty (2013) Cap. 17",sub:"1.2",trap:"A es lo que la startup cree. El problema no es velocidad sino COBERTURA: prototipos validan uno a uno, revisiones validan el conjunto."},
+
+{q:"Un nuevo requisito regulatorio llega después de la baseline del SRS. El PM dice: 'Es obligatorio, agreguémoslo directamente sin análisis'. ¿Qué está mal?",
+o:["Nada — los requisitos obligatorios se agregan directamente","INCLUSO cambios obligatorios pasan por el proceso formal: solicitud → análisis de impacto → aprobación → implementación → actualizar trazabilidad","Solo necesita aprobación, no análisis de impacto","Debería rechazarse para no afectar el cronograma"],c:1,
+x:"Según Sommerville (2011, Cap. 4.8), la baseline significa que TODO cambio — incluso obligatorio — pasa por control de cambios. El análisis de impacto no decide SI se hace (es obligatorio) sino CÓMO se implementa sin romper lo existente. Sin análisis, podrías quebrar funcionalidad.",
+ref:"Sommerville (2011) Cap. 4.8",sub:"1.2",trap:"A es el error más peligroso en la práctica. Que sea obligatorio no significa que se pueda agregar sin entender el impacto."},
+
+// ═══ 1.3 (12) ═══
+{q:"El SRS de un proyecto tiene en la sección 2.2: 'El sistema incluirá módulos de inventario, ventas y reportes'. En la sección 3.1 hay requisitos detallados para inventario y ventas, pero NADA de reportes. ¿Qué propiedades del SRS se violan?",
+o:["Solo completitud","Solo consistencia","Completitud Y consistencia","Solo verificabilidad"],c:2,
+x:"COMPLETITUD (faltan requisitos de reportes) Y CONSISTENCIA (la sección 2 promete algo que la 3 no cumple — contradicción interna). Según IEEE 830, un SRS consistente no debe contradecirse entre secciones.",
+ref:"IEEE 830 · Sommerville (2011) Cap. 4.7",sub:"1.3",trap:"D no aplica: el problema no es si los requisitos existentes son verificables, sino que FALTAN requisitos y el documento se contradice internamente."},
+
+{q:"'Realizar compra' tiene «include» con 'Verificar stock' y «extend» con 'Aplicar cupón'. Un usuario SIN cupón hace una compra. ¿Qué se ejecuta?",
+o:["Solo Realizar compra","Realizar compra + Verificar stock","Todo: Realizar compra + Verificar stock + Aplicar cupón","Realizar compra + Aplicar cupón"],c:1,
+x:"Include = SIEMPRE se ejecuta (Verificar stock). Extend = SOLO si se cumple la condición (tener cupón). Sin cupón, el extend no se activa. Resultado: Realizar compra + Verificar stock.",
+ref:"Sommerville (2011) Cap. 5.2 · Pressman (2010) Cap. 6",sub:"1.3",trap:"C olvida que extend es CONDICIONAL. Sin la condición (cupón), simplemente no ocurre."},
+
+{q:"¿Hacia dónde apuntan las flechas de include y extend en UML?",
+o:["Include: base→incluido. Extend: base→extendido.","Include: incluido→base. Extend: extendido→base.","Include: base→incluido. Extend: extendido→base.","Include: incluido→base. Extend: base→extendido."],c:2,
+x:"Include: la flecha va del DEPENDIENTE (base que necesita al incluido) HACIA el incluido. Extend: la flecha va del DEPENDIENTE (extensión que extiende al base) HACIA el base. Las direcciones son OPUESTAS entre sí.",
+ref:"Pressman (2010) Cap. 6 · Sommerville (2011) Cap. 5.2",sub:"1.3",trap:"Las 4 opciones mezclan las mismas dos direcciones. La clave: include apunta HACIA donde va (al incluido), extend apunta HACIA lo que extiende (al base)."},
+
+{q:"Un diagrama de actividad tiene fork → dos actividades paralelas → join. ¿Qué pasa en el join?",
+o:["El flujo continúa cuando CUALQUIERA de las dos termina","El flujo continúa cuando AMBAS terminan","El flujo se divide en dos caminos permanentes","Se ejecuta la actividad más rápida y se cancela la otra"],c:1,
+x:"Fork/join modelan CONCURRENCIA: fork divide, join SINCRONIZA — espera que TODOS los caminos paralelos terminen antes de continuar. Si fuera 'cualquiera', sería un merge, no un join.",
+ref:"Sommerville (2011) Cap. 5",sub:"1.3",trap:"A confunde join con merge. Join = todos deben terminar. Merge = cualquier camino llega."},
+
+{q:"'Como administrador, quiero que el sistema use React y PostgreSQL, para tener tecnología moderna.' ¿Cuál es el problema?",
+o:["Debería dividirse en dos historias","El rol debería ser 'desarrollador', no 'administrador'","No es una historia de usuario — es una restricción técnica/de diseño disfrazada de historia","Solo le falta agregar criterios de aceptación"],c:2,
+x:"Las historias describen NECESIDADES del usuario, no decisiones de implementación. 'Usar React' es restricción técnica que va en el SRS (sección 3.4). El usuario necesita una experiencia fluida — la tecnología la decide el equipo técnico.",
+ref:"Patton (2014) · Wiegers & Beatty (2013) Cap. 10 · IEEE 830",sub:"1.3",trap:"A suena razonable pero dividirla en dos seguirían siendo restricciones técnicas. El problema es FUNDAMENTAL: no es una necesidad del usuario."},
+
+{q:"Una historia dice: 'Como comprador, quiero buscar, agregar al carrito, pagar y recibir factura.' ¿Qué es y qué viola de INVEST?",
+o:["Historia bien escrita — cubre el flujo completo","Épica — viola Small porque no cabe en un sprint","Caso de uso disfrazado de historia — viola Independent","Requisito de sistema — viola Negotiable"],c:1,
+x:"Según Patton (2014), es una ÉPICA: cubre demasiadas funcionalidades. Viola la S (Small) de INVEST. Debe descomponerse en historias individuales: buscar, agregar, pagar, facturar. Cada una debe caber en un sprint.",
+ref:"Patton (2014) · Wiegers & Beatty (2013) Cap. 10",sub:"1.3",trap:"A suena bien porque tiene el formato correcto y detalle, pero el detalle excesivo = épica. 'Bien escrita' ≠ caber en un sprint."},
+
+{q:"En User Story Mapping, ¿qué es el 'walking skeleton' según Patton?",
+o:["El backlog ordenado por prioridad","El MVP que cubre el flujo COMPLETO de izquierda a derecha con funcionalidad mínima en cada paso","Las historias técnicas de infraestructura que van primero","El primer sprint del proyecto"],c:1,
+x:"Patton (2014) define el walking skeleton como un MVP que recorre TODO el backbone (flujo completo) aunque con funcionalidad mínima en cada actividad. Es mejor un sistema que hace TODO el flujo de forma básica que uno que hace la mitad del flujo de forma completa.",
+ref:"Patton (2014)",sub:"1.3",trap:"A describe un backlog plano, no un USM. C confunde con 'technical stories'. D confunde con planificación de sprint."},
+
+{q:"Story points son 5 para el equipo A y 5 para el equipo B. ¿Significan lo mismo?",
+o:["Sí, 5 puntos es igual para todos los equipos","No necesariamente — los story points son RELATIVOS a cada equipo","Sí, si ambos usan Fibonacci","Depende de si ambos usan Planning Poker"],c:1,
+x:"Según Usman et al. (2015), los story points son RELATIVOS al equipo que estima. 5 puntos para el equipo A podría ser 8 para el equipo B dependiendo de su experiencia, herramientas y velocidad. A diferencia de los Puntos de Función, que son absolutos.",
+ref:"Usman et al. (2015) · Pressman (2010) Cap. 23",sub:"1.3",trap:"A y C asumen universalidad. La escala es INTERNA del equipo — solo sirve para comparar dentro del mismo equipo."},
+
+{q:"Un cambio en RF-015 impacta 2 casos de uso, 3 módulos y 4 pruebas según la matriz de trazabilidad. ¿Cuántos artefactos revisar?",
+o:["Solo RF-015","Los 2 casos de uso (diseño está separado)","Todos: 2 CU + 3 módulos + 4 pruebas = 9 artefactos","No se puede saber sin el análisis de impacto"],c:2,
+x:"La trazabilidad indica que TODOS los artefactos vinculados PODRÍAN verse afectados. Los 9 son candidatos a revisión. El análisis de impacto (Sommerville Cap. 4.8) determina cuáles realmente necesitan cambio, pero primero hay que identificar los candidatos — y eso lo da la matriz.",
+ref:"Wiegers & Beatty (2013) Cap. 20 · Sommerville (2011) Cap. 4.8",sub:"1.3",trap:"D suena prudente pero la matriz SÍ identifica los candidatos. La revisión individual viene DESPUÉS de identificarlos."},
+
+{q:"Un tester en la revisión de requisitos señala: 'El requisito dice enviar email de confirmación pero no dice qué pasa si el servidor de email está caído'. ¿Qué propiedad evalúa?",
+o:["Verificabilidad","Completitud — falta el escenario de excepción","Consistencia","Factibilidad"],c:1,
+x:"El tester evalúa COMPLETITUD: un requisito completo debe cubrir el happy path Y los escenarios de excepción. ¿Qué pasa si falla? ¿Se reintenta? ¿Se registra en log? Sin esto, el desarrollador decide por su cuenta.",
+ref:"Sommerville (2011) Cap. 4.7 · McConnell",sub:"1.3",trap:"A no aplica: el requisito SÍ es verificable ('enviar email'). Lo que falta es el escenario de ERROR — eso es completitud."},
+
+{q:"¿Cuál de estos requisitos PASA la prueba de verificabilidad?",
+o:["'El sistema debe tener buena usabilidad'","'El sistema debe ser escalable para el futuro'","'El 95% de las transacciones deben procesarse en <2s bajo carga de 500 usuarios'","'El sistema debe ser seguro y confiable'"],c:2,
+x:"C especifica: métrica (95%), condición (carga), definición (500 usuarios), umbral (2s). Se puede diseñar una prueba de carga que verifique esto. Los demás son vagos y subjetivos.",
+ref:"Sommerville (2011) Cap. 4.7.2",sub:"1.3",trap:"Todos los distractores SUENAN legítimos pero ninguno es verificable por falta de métricas concretas."},
+
+{q:"¿Cuál es la diferencia FUNDAMENTAL entre SysML y UML para documentar requisitos?",
+o:["SysML es más nuevo, UML es legacy","SysML tiene diagrama de REQUISITOS nativo y modela hardware+software; UML solo modela software","SysML es para equipos grandes; UML para equipos pequeños","No hay diferencia — SysML es una versión de UML"],c:1,
+x:"SysML extiende UML con diagramas para ingeniería de SISTEMAS: diagrama de requisitos (UML NO lo tiene), diagrama de bloques, diagrama paramétrico. Cuando el sistema incluye hardware (sensores, actuadores), SysML es la opción. UML es solo software.",
+ref:"SysML.org · SWEBOK v3.0 Cap. 1.5",sub:"1.3",trap:"D minimiza las diferencias. SysML no es 'una versión' — es una extensión con capacidades que UML no tiene."},
+];
+
+function App(){
+  const [tab,setTab]=useState("menu");
+  const [sub,setSub]=useState("1.1");
+  const [ti,setTi]=useState(0);
+  const [qs,setQs]=useState([]);
+  const [cur,setCur]=useState(0);
+  const [ans,setAns]=useState({});
+  const [st,setSt]=useState({});
+  const [done,setDone]=useState(false);
+
+  const topics=T[sub]||[];
+  const subs={"1.1":{n:"Tipos de Requerimientos",c:"#3B82F6",r:12},"1.2":{n:"Obtención, Análisis, Priorización, Validación",c:"#8B5CF6",r:9},"1.3":{n:"Documentación de Requerimientos",c:"#7C3AED",r:10}};
+
+  const startQuiz=(filter)=>{
+    let pool=filter?Q.filter(q=>q.sub===filter):[...Q];
+    pool.sort(()=>Math.random()-0.5);
+    setQs(pool);setCur(0);setAns({});setSt({});setDone(false);setTab("quiz");
+  };
+
+  const pick=(i)=>{if(ans[cur]!==undefined)return;setAns(p=>({...p,[cur]:i}))};
+  const score=Object.entries(ans).filter(([k,v])=>v===qs[+k]?.correct).length;
+  const allDone=qs.length>0&&Object.keys(ans).length===qs.length;
+
+  const fmt=(text)=>text.split('\n').map((ln,i)=>{
+    ln=ln.trim();
+    if(!ln)return <div key={i} style={{height:6}}/>;
+    let p=ln.split(/\*\*(.*?)\*\*/g);
+    let r=p.map((s,j)=>j%2===1?<strong key={j} style={{color:"#E2E8F0"}}>{s}</strong>:<span key={j}>{s}</span>);
+    if(ln.startsWith('•')||ln.startsWith('—'))return<div key={i} style={{paddingLeft:16,fontSize:14,lineHeight:1.75,color:"#B0BEC5"}}>{r}</div>;
+    if(ln.startsWith('✗')||ln.startsWith('✓'))return<div key={i} style={{paddingLeft:16,fontSize:14,lineHeight:1.75,color:ln.startsWith('✗')?"#F87171":"#4ADE80"}}>{r}</div>;
+    return<div key={i} style={{fontSize:14,lineHeight:1.75,color:"#B0BEC5"}}>{r}</div>;
+  });
+
+  return(
+  <div style={{minHeight:"100vh",background:"#0B0F1A",padding:"14px 10px 40px"}}>
+  <div style={{maxWidth:920,margin:"0 auto"}}>
+
+    {/* HEADER */}
+    <div style={{background:"linear-gradient(135deg,#0F172A,#1a2040 40%,#1a1530 70%,#0F172A)",border:"1px solid #2563EB30",borderRadius:16,padding:"24px 22px",marginBottom:18,position:"relative",overflow:"hidden"}}>
+      <div style={{position:"absolute",top:-40,right:-40,width:200,height:200,background:"radial-gradient(circle,rgba(37,99,235,0.06),transparent 70%)"}}/>
+      <div className="m" style={{fontSize:9,letterSpacing:3,color:"#475569",marginBottom:5}}>CENEVAL EGEL PLUS · ISOFT · ÁREA 1 COMPLETA · 31 REACTIVOS</div>
+      <h1 style={{fontSize:20,fontWeight:700,color:"#F1F5F9"}}>Análisis de Sistemas de Software</h1>
+      <p style={{color:"#64748B",fontSize:13,marginTop:5}}>Subáreas 1.1 + 1.2 + 1.3 — Teoría completa + Quiz de repaso ({Q.length} preguntas)</p>
+      <div style={{display:"flex",gap:7,marginTop:13,flexWrap:"wrap"}}>
+        {Object.entries(subs).map(([k,v])=>
+          <div key={k} style={{background:v.c+"10",border:"1px solid "+v.c+"25",borderRadius:8,padding:"4px 12px"}}>
+            <div style={{fontSize:12,color:v.c,fontWeight:600}}>{k} · {v.r} react.</div>
+            <div style={{fontSize:10,color:"#475569"}}>{v.n.substring(0,30)}</div>
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* NAV */}
+    <div style={{display:"flex",gap:5,marginBottom:14,flexWrap:"wrap"}}>
+      {[["menu","🏠 Menú"],["theory","📖 Teoría"],["quiz","🧪 Quiz"]].map(([k,l])=>
+        <button key={k} onClick={()=>{setTab(k);if(k==="quiz"&&qs.length===0)setTab("menu")}} style={{padding:"8px 15px",borderRadius:9,fontSize:13,fontWeight:tab===k?700:400,background:tab===k?"#2563EB":"#111827",color:tab===k?"#fff":"#64748B",border:tab===k?"none":"1px solid #1E293B"}}>{l}</button>
+      )}
+    </div>
+
+    {/* MENÚ */}
+    {tab==="menu"&&<div className="fu" style={{display:"grid",gap:10}}>
+      <div className="m" style={{fontSize:10,letterSpacing:2,color:"#475569"}}>TEORÍA POR SUBÁREA</div>
+      {Object.entries(subs).map(([k,v])=>
+        <button key={k} onClick={()=>{setSub(k);setTi(0);setTab("theory")}} style={{background:"#111827",border:"1px solid "+v.c+"30",borderRadius:12,padding:"16px 20px",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div><div style={{fontSize:16,fontWeight:700,color:v.c}}>📖 {k} — {v.n}</div>
+          <div style={{fontSize:12,color:"#64748B",marginTop:3}}>{(T[k]||[]).length} temas · {v.r} reactivos EGEL</div></div>
+          <span style={{color:v.c,fontWeight:600,fontSize:13}}>Ver →</span>
+        </button>
+      )}
+      <div style={{borderTop:"1px solid #1E293B",paddingTop:12,marginTop:4}}>
+        <div className="m" style={{fontSize:10,letterSpacing:2,color:"#475569",marginBottom:8}}>QUIZZES DE PRÁCTICA</div>
+        {[["1.1","🧪 Quiz 1.1 — Tipos de Requerimientos",Q.filter(q=>q.sub==="1.1").length,"#3B82F6"],
+          ["1.2","🧪 Quiz 1.2 — Obtención, Análisis, Priorización, Validación",Q.filter(q=>q.sub==="1.2").length,"#8B5CF6"],
+          ["1.3","🧪 Quiz 1.3 — Documentación",Q.filter(q=>q.sub==="1.3").length,"#7C3AED"],
+          [null,"🔥 SIMULACRO COMPLETO — Área 1",Q.length,"#EF4444"]
+        ].map(([f,t,n,c])=>
+          <button key={t} onClick={()=>startQuiz(f)} style={{background:"#111827",border:"1px solid "+c+"30",borderRadius:10,padding:"14px 18px",textAlign:"left",width:"100%",marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><div style={{fontSize:14,fontWeight:700,color:c}}>{t}</div>
+            <div style={{fontSize:12,color:"#64748B",marginTop:2}}>{n} preguntas difíciles con trampas</div></div>
+            <span style={{color:c,fontSize:13,fontWeight:600}}>Iniciar →</span>
+          </button>
+        )}
+      </div>
+    </div>}
+
+    {/* TEORÍA */}
+    {tab==="theory"&&<div className="fu">
+      <div style={{display:"flex",gap:5,marginBottom:10}}>
+        {Object.entries(subs).map(([k,v])=>
+          <button key={k} onClick={()=>{setSub(k);setTi(0)}} style={{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:sub===k?700:400,background:sub===k?v.c+"20":"#111827",color:sub===k?v.c:"#64748B",border:"1px solid "+(sub===k?v.c+"40":"#1E293B")}}>{k}</button>
+        )}
+      </div>
+      <div style={{display:"flex",gap:5,marginBottom:12,flexWrap:"wrap"}}>
+        {topics.map((t,i)=>
+          <button key={t.id} onClick={()=>setTi(i)} style={{padding:"6px 12px",borderRadius:20,fontSize:11,background:ti===i?t.color:"#0B0F1A",color:ti===i?"#fff":"#64748B",border:"1px solid "+(ti===i?t.color:"#1E293B")}}>{t.icon} {t.title.substring(0,25)}</button>
+        )}
+      </div>
+      {topics[ti]&&<div style={{background:"#111827",border:"1px solid #1E293B",borderRadius:14,overflow:"hidden"}}>
+        <div style={{background:topics[ti].color+"08",borderBottom:"1px solid "+topics[ti].color+"20",padding:"18px 22px"}}>
+          <h2 style={{fontSize:18,fontWeight:700,color:"#F1F5F9"}}>{topics[ti].icon} {topics[ti].title}</h2>
+        </div>
+        <div style={{padding:"18px 22px"}}>
+          {fmt(topics[ti].content)}
+          <div className="r" style={{marginTop:14,padding:"10px 14px",background:"#0B0F1A",borderRadius:8,border:"1px solid #1E293B"}}>📖 <strong style={{color:"#94A3B8"}}>Ref:</strong> {topics[ti].ref}</div>
+        </div>
+      </div>}
+    </div>}
+
+    {/* QUIZ */}
+    {tab==="quiz"&&qs.length>0&&!done&&<div className="fu">
+      <div style={{background:"#111827",border:"1px solid #1E293B",borderRadius:14,overflow:"hidden"}}>
+        <div style={{padding:"12px 20px",borderBottom:"1px solid #1E293B",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+          <div><div style={{fontSize:14,fontWeight:700,color:"#F1F5F9"}}>{qs[0].sub===qs[qs.length-1].sub?"Quiz "+qs[0].sub:"🔥 Simulacro Área 1"}</div>
+          <div style={{fontSize:11,color:"#475569"}}>{cur+1}/{qs.length} · ✓{score}/{Object.keys(ans).length||0}</div></div>
+          <button onClick={()=>{setTab("menu");setQs([])}} style={{padding:"5px 12px",borderRadius:6,fontSize:11,background:"#1E293B",color:"#64748B",border:"1px solid #334155"}}>← Salir</button>
+        </div>
+        <div style={{height:3,background:"#1E293B"}}><div style={{height:"100%",width:((cur+1)/qs.length*100)+"%",background:subs[qs[cur].sub]?.c||"#EF4444",transition:"width 0.3s"}}/></div>
+        <div style={{padding:"20px"}}>
+          <span className="m" style={{fontSize:10,padding:"3px 9px",borderRadius:12,background:(subs[qs[cur].sub]?.c||"#64748B")+"12",color:subs[qs[cur].sub]?.c||"#64748B",border:"1px solid "+(subs[qs[cur].sub]?.c||"#64748B")+"25"}}>{qs[cur].sub}</span>
+          <div style={{fontSize:15,fontWeight:600,color:"#E2E8F0",lineHeight:1.65,marginTop:10,marginBottom:16}}>{qs[cur].q}</div>
+          <div style={{display:"grid",gap:7}}>
+            {qs[cur].o.map((opt,i)=>{
+              const a=ans[cur]!==undefined,iS=ans[cur]===i,iC=i===qs[cur].c;
+              let bg="#0B0F1A",bd="#1E293B",cl="#94A3B8";
+              if(a){if(iC){bg="#4ADE800D";bd="#4ADE8050";cl="#4ADE80"}else if(iS){bg="#F871710D";bd="#F8717150";cl="#F87171"}}
+              return<button key={i} onClick={()=>pick(i)} style={{background:bg,border:"1px solid "+bd,borderRadius:10,padding:"11px 15px",textAlign:"left",fontSize:14,color:cl,cursor:a?"default":"pointer",lineHeight:1.5}}>
+                <span style={{fontWeight:700,marginRight:8,opacity:0.5}}>{String.fromCharCode(65+i)}.</span>{opt}{a&&iC?" ✓":""}{a&&iS&&!iC?" ✗":""}
+              </button>})}
+          </div>
+          {ans[cur]!==undefined&&<div style={{marginTop:14}}>
+            <div style={{background:"#0c1a2e",border:"1px solid #1E3A5F",borderRadius:10,padding:"14px 16px"}}>
+              <div className="m" style={{fontSize:10,letterSpacing:2,color:"#93C5FD",marginBottom:5,fontWeight:600}}>EXPLICACIÓN</div>
+              <div style={{fontSize:13,color:"#CBD5E1",lineHeight:1.7}}>{qs[cur].x}</div>
+              <div className="r" style={{marginTop:6}}>📖 <strong style={{color:"#94A3B8"}}>Ref:</strong> {qs[cur].ref}</div>
+            </div>
+            {qs[cur].trap&&<button onClick={()=>setSt(p=>({...p,[cur]:!p[cur]}))} style={{marginTop:8,padding:"8px 14px",borderRadius:8,fontSize:12,background:st[cur]?"#F59E0B15":"#1E293B",color:st[cur]?"#FCD34D":"#64748B",border:"1px solid "+(st[cur]?"#F59E0B30":"#334155"),width:"100%",textAlign:"left"}}>{st[cur]?"▼":"▶"} ⚠️ Trampa</button>}
+            {st[cur]&&qs[cur].trap&&<div style={{background:"#F59E0B08",border:"1px solid #F59E0B20",borderRadius:8,padding:"12px 14px",marginTop:4,fontSize:13,color:"#FCD34D",lineHeight:1.6}}>{qs[cur].trap}</div>}
+          </div>}
+        </div>
+        <div style={{padding:"10px 20px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid #1E293B"}}>
+          <button onClick={()=>setCur(p=>Math.max(0,p-1))} disabled={cur===0} style={{padding:"7px 14px",borderRadius:8,fontSize:12,background:"#0B0F1A",color:cur===0?"#1E293B":"#64748B",border:"1px solid #1E293B"}}>←</button>
+          {allDone?<button onClick={()=>setDone(true)} style={{padding:"8px 20px",borderRadius:8,fontSize:13,fontWeight:700,background:"#EF4444",color:"#fff"}}>Ver resultados</button>:null}
+          <button onClick={()=>setCur(p=>Math.min(qs.length-1,p+1))} disabled={cur===qs.length-1} style={{padding:"7px 14px",borderRadius:8,fontSize:12,background:"#0B0F1A",color:cur===qs.length-1?"#1E293B":"#64748B",border:"1px solid #1E293B"}}>→</button>
+        </div>
+      </div>
+      <div style={{marginTop:8,background:"#111827",border:"1px solid #1E293B",borderRadius:8,padding:"10px 14px"}}>
+        <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
+          {qs.map((_,i)=>{const a=ans[i],c=a===undefined?"#1E293B":a===qs[i].c?"#4ADE80":"#F87171";
+            return<button key={i} onClick={()=>setCur(i)} style={{width:24,height:24,borderRadius:5,fontSize:10,background:i===cur?(subs[qs[i].sub]?.c||"#EF4444")+"30":c==="#1E293B"?"#0B0F1A":c+"15",color:i===cur?"#F1F5F9":c==="#1E293B"?"#475569":c,border:"1px solid "+(i===cur?subs[qs[i].sub]?.c||"#EF4444":c==="#1E293B"?"#1E293B":c+"40"),display:"flex",alignItems:"center",justifyContent:"center"}}>{i+1}</button>})}
+        </div>
+      </div>
+    </div>}
+
+    {/* RESULTADOS */}
+    {tab==="quiz"&&done&&<div className="fu">
+      <div style={{background:"#111827",border:"1px solid #1E293B",borderRadius:14,padding:"26px 22px"}}>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:48,marginBottom:8}}>{score>=qs.length*0.8?"🏆":score>=qs.length*0.6?"👍":"📖"}</div>
+          <h2 style={{fontSize:28,fontWeight:700,color:"#F1F5F9"}}>{score} / {qs.length}</h2>
+          <div style={{fontSize:16,color:"#64748B"}}>{Math.round(score/qs.length*100)}%</div>
+          <p style={{color:"#94A3B8",fontSize:14,marginTop:8}}>{score>=qs.length*0.8?"¡Dominas el Área 1!":score>=qs.length*0.6?"Buen nivel. Refuerza donde fallaste.":"Necesitas repasar. Revisa la teoría."}</p>
+        </div>
+        {["1.1","1.2","1.3"].map(s=>{
+          const cQs=qs.map((q,i)=>({...q,idx:i})).filter(q=>q.sub===s);
+          if(cQs.length===0)return null;
+          const cS=cQs.filter(q=>ans[q.idx]===q.c).length;
+          const pct=Math.round(cS/cQs.length*100);
+          return<div key={s} style={{marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+              <span style={{fontSize:14,fontWeight:700,color:subs[s].c}}>{s} — {subs[s].n.substring(0,25)}</span>
+              <span style={{fontSize:13,fontWeight:700,color:pct>=70?"#4ADE80":"#F87171"}}>{cS}/{cQs.length} ({pct}%)</span>
+            </div>
+            <div style={{background:"#0B0F1A",borderRadius:6,height:8,overflow:"hidden",marginBottom:6}}>
+              <div style={{width:pct+"%",height:"100%",background:subs[s].c,borderRadius:6}}/>
+            </div>
+            {cQs.filter(q=>ans[q.idx]!==q.c).map(q=><div key={q.idx} style={{background:"#F8717108",border:"1px solid #F8717118",borderRadius:6,padding:"8px 12px",marginBottom:4}}>
+              <div style={{fontSize:12,color:"#F87171",fontWeight:600}}>❌ P{q.idx+1}: {q.q.substring(0,80)}...</div>
+              <div style={{fontSize:12,color:"#4ADE80",marginTop:3}}>✓ {q.o[q.c]}</div>
+              {q.trap&&<div style={{fontSize:11,color:"#FCD34D",marginTop:2}}>⚠️ {q.trap.substring(0,100)}...</div>}
+            </div>)}
+          </div>
+        })}
+        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginTop:16}}>
+          <button onClick={()=>startQuiz(qs[0].sub===qs[qs.length-1]?.sub?qs[0].sub:null)} style={{padding:"10px 22px",borderRadius:9,fontSize:14,fontWeight:700,background:"#EF4444",color:"#fff"}}>🔄 Reintentar</button>
+          <button onClick={()=>{setDone(false);setCur(0)}} style={{padding:"10px 22px",borderRadius:9,fontSize:14,background:"#1E293B",color:"#94A3B8",border:"1px solid #334155"}}>📋 Revisar</button>
+          <button onClick={()=>{setTab("menu");setQs([])}} style={{padding:"10px 22px",borderRadius:9,fontSize:14,background:"#1E293B",color:"#94A3B8",border:"1px solid #334155"}}>← Menú</button>
+        </div>
+      </div>
+    </div>}
+
+    <div style={{textAlign:"center",marginTop:20,fontSize:10,color:"#334155"}}>EGEL Plus® ISOFT · Área 1 Completa · Análisis de Sistemas de Software · 31 reactivos · Bibliografía oficial</div>
+  </div></div>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
